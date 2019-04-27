@@ -17,13 +17,11 @@ public abstract class Monad<M, T> extends Applicative<M, T> {
   }
 
   public <U> Function<Monad<M, T>, Monad<?, U>> fmap(final Function<T, U> f) {
-    return new Function<Monad<M, T>, Monad<?, U>>() {
-      public Monad<?, U> apply(final Monad<M, T> mt) {
-        try {
-          return mt.yield(f);
-        } catch (RuntimeException e) {
-          return mt.fail(e);
-        }
+    return mt -> {
+      try {
+        return mt.yield(f);
+      } catch (RuntimeException e) {
+        return mt.fail(e);
       }
     };
   }

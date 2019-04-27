@@ -6,7 +6,7 @@ public abstract class StateMonad<T, State> extends Monad<ValueWithState<T, State
   public static <U, State> StateMonad<U, State> instance(final U value) {
     return new StateMonad<U, State>() {
       @Override protected ValueWithState<U, State> getValueWithState(State state) {
-        return new ValueWithState<U, State>(value, state);
+        return new ValueWithState<>(value, state);
       }
     };
   }
@@ -20,7 +20,7 @@ public abstract class StateMonad<T, State> extends Monad<ValueWithState<T, State
       @Override protected ValueWithState<U, State> getValueWithState(State state) {
         ValueWithState<T, State> valueWithState = StateMonad.this.getValueWithState(state);
         U newValue = f.apply(valueWithState.getValue());
-        return new ValueWithState<U, State>(newValue, valueWithState.getState());
+        return new ValueWithState<>(newValue, valueWithState.getState());
       }
     };
   }

@@ -54,11 +54,9 @@ public final class ListMonad<T> extends Monad<List<T>, T> implements List<T> {
   }
 
   @Override protected <U> ListMonad<U> join() { // concat
-    return foldLeft(new ListMonad<U>(), new Operator<T, ListMonad<U>>() {
-      public ListMonad<U> apply(ListMonad<U> result, T nested) {
-        result.addAll((List<U>) nested);
-        return result;
-      }
+    return foldLeft(new ListMonad<U>(), (result, nested) -> {
+      result.addAll((List<U>) nested);
+      return result;
     });
   }
 
@@ -84,14 +82,12 @@ public final class ListMonad<T> extends Monad<List<T>, T> implements List<T> {
     }
   }
 
-  public ListMonad<T> filter(final Function<T, Boolean> pred) {
-    return bind(new Function<T, ListMonad<T>>() {
-      public ListMonad<T> apply(T elem) {
-        if (pred.apply(elem)) {
-          return instance(elem);
-        } else {
-          return instance(Collections.EMPTY_LIST);
-        }
+  public ListMonad<T> filter(final Function<T, Boolean> predicate) {
+    return bind((Function<T, ListMonad<T>>) elem -> {
+      if (predicate.apply(elem)) {
+        return instance(elem);
+      } else {
+        return instance(Collections.EMPTY_LIST);
       }
     });
   }

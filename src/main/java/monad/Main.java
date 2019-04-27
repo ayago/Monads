@@ -8,33 +8,21 @@ import java.util.List;
 
 public class Main {
 
-  static Function<Integer, Monad<List<Integer>, Integer>> repeatNumber =
-      new Function<Integer, Monad<List<Integer>, Integer>>() {
-        @Override public Monad<List<Integer>, Integer> apply(Integer arg) {
-          return ListMonad.instance(Collections.nCopies(arg, arg));
-        }
-      };
+  private static Function<Integer, Monad<List<Integer>, Integer>> repeatNumber =
+          arg -> ListMonad.instance(Collections.nCopies(arg, arg));
 
-  static Function<Integer, ListMonad<Object>> listFail = new Function<Integer, ListMonad<Object>>() {
-    @Override public ListMonad<Object> apply(Integer arg) {
-      throw new RuntimeException();
-    }
+  static Function<Integer, ListMonad<Object>> listFail = arg -> {
+    throw new RuntimeException();
   };
 
-  static Function<String, MaybeMonad<Integer>> hashCode =
-      new Function<String, MaybeMonad<Integer>>() {
-        @Override public MaybeMonad<Integer> apply(String arg) {
-          return MaybeMonad.instance(arg.hashCode());
-        }
-      };
+  private static Function<String, MaybeMonad<Integer>> hashCode =
+          arg -> MaybeMonad.instance(arg.hashCode());
 
-  static Function<Integer, MaybeMonad<Object>> maybeFail = new Function<Integer, MaybeMonad<Object>>() {
-    @Override public MaybeMonad<Object> apply(Integer arg) {
-      throw new RuntimeException();
-    }
+  static Function<Integer, MaybeMonad<Object>> maybeFail = arg -> {
+    throw new RuntimeException();
   };
 
-  public static Either<UnsupportedEncodingException, String> encode2(String str) {
+  private static Either<UnsupportedEncodingException, String> encode2(String str) {
     try {
       return Right.instance(URLEncoder.encode(str, "utf-8"));
     } catch (UnsupportedEncodingException e) {
@@ -42,59 +30,44 @@ public class Main {
     }
   }
 
-  static Function<String, String> toUpper = new Function<String, String>() {
-    public String apply(String arg) {
-      return arg.toUpperCase();
-    }
-  };
+  static Function<String, String> toUpper = String::toUpperCase;
 
-  static Function<Integer, StateMonad<Integer, String>> increment =
-      new Function<Integer, StateMonad<Integer, String>>() {
-        @Override public StateMonad<Integer, String> apply(final Integer arg) {
-          return new StateMonad<Integer, String>() {
+  private static Function<Integer, StateMonad<Integer, String>> increment =
+          arg -> new StateMonad<Integer, String>() {
             @Override protected ValueWithState<Integer, String> getValueWithState(String s) {
-              return new ValueWithState<Integer, String>(arg + 1, s + "\n Increment");
+              return new ValueWithState<>(arg + 1, s + "\n Increment");
             }
           };
-        }
-      };
 
-  static Function<Integer, StateMonad<Integer, String>> multiply =
-      new Function<Integer, StateMonad<Integer, String>>() {
-        @Override public StateMonad<Integer, String> apply(final Integer arg) {
-          return new StateMonad<Integer, String>() {
+  private static Function<Integer, StateMonad<Integer, String>> multiply =
+          arg -> new StateMonad<Integer, String>() {
             @Override protected ValueWithState<Integer, String> getValueWithState(String s) {
-              return new ValueWithState<Integer, String>(arg * 3, s + "\n Multiply");
+              return new ValueWithState<>(arg * 3, s + "\n Multiply");
             }
           };
-        }
-      };
 
+  private static Function<String, Result<String>> capitaliseResultString =
+          s -> Result.fallible(s::toUpperCase);
 
+  private static Function<String, Result<String>> finaliseResultString =
+          s -> Result.fallible(() -> s.concat(" YAGO"));
 
   public static void main(String... args) {
     ListMonad comprehension =
         (ListMonad) ListMonad.instance(
-            Arrays.asList(1, 2, 3, 4)).bind(repeatNumber).map(new Function<Integer, Integer>() {
-          @Override public Integer apply(Integer arg) {
-            return arg * 2;
-          }
-        });//.bind(listFail);
+            Arrays.asList(1, 2, 3, 4)).bind(repeatNumber).map(arg -> arg * 2);//.bind(listFail);
     System.out.println(comprehension);
 
     separator();
 
-    MaybeMonad failSafe = MaybeMonad.instance("Frankie").bind(hashCode);//.bind(maybeFail);
+    MaybeMonad<Object> failSafe = MaybeMonad.instance("Frankie").bind(hashCode).bind(maybeFail);//.bind(maybeFail);
 
     System.out.println(failSafe);
 
     separator();
 
-    Object encoding = encode2("will always succeed").left().map(new Function<UnsupportedEncodingException, Object>() {
-      @Override public Object apply(UnsupportedEncodingException arg) {
-        return arg.getMessage();
-      }
-    }).get();
+    String encoding = encode2("will always succeed").left()
+            .map(Throwable::getMessage).get();
 
     System.out.println(encoding);
 
@@ -107,6 +80,29 @@ public class Main {
 
     System.out.println(valueWithState.getValue());
     System.out.println(valueWithState.getState());
+
+    separator();
+
+    @SuppressWarnings("ConstantConditions")
+    String fail = Result.fallible(() -> errorProducingString(true))
+            .bind(capitaliseResultString)
+            .bind(finaliseResultString)
+            .whenErrorThen(() -> "Default Result");
+
+    String success = Result.fallible(() -> errorProducingString(false))
+            .bind(capitaliseResultString)
+            .bind(finaliseResultString)
+            .whenErrorThen(() -> "Default Result");
+
+    System.out.println("Result fail is: "+fail);
+    System.out.println("Result success is: "+success);
+  }
+
+  private static String errorProducingString(boolean error) {
+    if(error)
+      throw new RuntimeException("HAHA");
+
+    return "Adrian";
   }
 
   private static void separator() {

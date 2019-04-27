@@ -8,8 +8,8 @@ public abstract class EitherMonad<M, L, R, T> extends Monad<M, T> implements Eit
     this.value = value;
   }
 
-  public final <U> U get() {
-    return (U) value;
+  public final T get() {
+    return value;
   }
 
   @Override public final <U> EitherMonad<M, L, R, U> bind(Function<T, ? extends Monad<?, U>> f) {
@@ -32,7 +32,7 @@ interface Either<L, R> {
 class Left<L, R> extends EitherMonad<Left<L, R>, L, R, L> {
 
   public static <L, R> Left<L, R> instance(L value) {
-    return new Left<L, R>(value);
+    return new Left<>(value);
   }
 
   protected Left(L value) {
@@ -76,7 +76,7 @@ class Left<L, R> extends EitherMonad<Left<L, R>, L, R, L> {
 class Right<L, R> extends EitherMonad<Right<L, R>, L, R, R> {
 
   public static <L, R> Right<L, R> instance(R value) {
-    return new Right<L, R>(value);
+    return new Right<>(value);
   }
 
   protected Right(R value) {
