@@ -4,7 +4,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Main {
 
@@ -50,7 +52,20 @@ public class Main {
           s -> Result.fallible(s::toUpperCase);
 
   private static Function<String, Result<String>> finaliseResultString =
-          s -> Result.fallible(() -> s.concat(" YAGO"));
+          s -> Result.fallible(() -> s.concat(" GREATUS"));
+
+  private static Function<String, Result<Integer>> getIdForName =
+          s -> {
+            Map<String, Integer> idRegistry = new HashMap<>();
+            idRegistry.put("POUPING GREATUS", 1);
+            idRegistry.put("POUPY GREATUS", 2);
+
+            if(idRegistry.containsKey(s)) {
+              return Result.fallible(() -> idRegistry.get(s));
+            } else {
+              return Result.error(new RuntimeException("Id does not exist for"+s));
+            }
+          };
 
   public static void main(String... args) {
     ListMonad comprehension =
@@ -84,25 +99,34 @@ public class Main {
     separator();
 
     @SuppressWarnings("ConstantConditions")
-    String fail = Result.fallible(() -> errorProducingString(true))
+    String fail = Result.fallible(() -> errorProducingString("Pouping",true))
             .bind(capitaliseResultString)
             .bind(finaliseResultString)
-            .whenErrorThen(() -> "Default Result");
+            .bind(getIdForName)
+            .whenErrorThen(() -> "Failed Result");
 
-    String success = Result.fallible(() -> errorProducingString(false))
+    String anotherFail = Result.fallible(() -> errorProducingString("Adrian2",false))
             .bind(capitaliseResultString)
             .bind(finaliseResultString)
-            .whenErrorThen(() -> "Default Result");
+            .bind(getIdForName)
+            .whenErrorThen(() -> "");
+
+    Integer success = Result.fallible(() -> errorProducingString("Poupy", false))
+            .bind(capitaliseResultString)
+            .bind(finaliseResultString)
+            .bind(getIdForName)
+            .get();
 
     System.out.println("Result fail is: "+fail);
+    System.out.println("Result fail is: "+anotherFail);
     System.out.println("Result success is: "+success);
   }
 
-  private static String errorProducingString(boolean error) {
+  private static String errorProducingString(String reflectName, boolean error) {
     if(error)
       throw new RuntimeException("HAHA");
 
-    return "Adrian";
+    return reflectName;
   }
 
   private static void separator() {

@@ -13,6 +13,26 @@ public abstract class Result<T> extends Monad<Result<T>, T> {
     public abstract boolean isError();
 
     /**
+     * Factory method to create a successful result
+     * @param value contained value
+     * @param <U> contained value type
+     * @return a result instance of type U
+     */
+    public static <U> Result<U> ok(U value) {
+        return new Success<>(value);
+    }
+
+    /**
+     * Factory method to create an erroneous result
+     * @param throwable cause of error
+     * @param <U> target contained type
+     * @return a result instance of type U containing the error cause
+     */
+    public static <U> Result<U> error(Throwable throwable) {
+        return new Failure<>(throwable);
+    }
+
+    /**
      * Handles the side effect of an operation when
      * the execution resulted to an exception. Specifically
      * when this result object is erroneous, the supplier is invoked
@@ -21,7 +41,7 @@ public abstract class Result<T> extends Monad<Result<T>, T> {
      * @param other the supplier of alternative value
      * @return a Result of same type with instance equal to the supplied value
      */
-    public abstract T whenErrorThen(final Supplier<T> other);
+    public abstract <U> U whenErrorThen(final Supplier<U> other);
 
     /**
      * Factory method to create a result based from the evaluation
@@ -64,8 +84,8 @@ public abstract class Result<T> extends Monad<Result<T>, T> {
         }
 
         @Override
-        public T whenErrorThen(Supplier<T> other) {
-            return value;
+        public <U> U whenErrorThen(Supplier<U> other) {
+            return get();
         }
 
         @Override
@@ -99,7 +119,7 @@ public abstract class Result<T> extends Monad<Result<T>, T> {
         }
 
         @Override
-        public T whenErrorThen(Supplier<T> other) {
+        public <U> U whenErrorThen(Supplier<U> other) {
             return other.get();
         }
 
