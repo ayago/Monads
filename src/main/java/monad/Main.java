@@ -75,7 +75,8 @@ public class Main {
 
     separator();
 
-    MaybeMonad<Object> failSafe = MaybeMonad.instance("Frankie").bind(hashCode).bind(maybeFail);//.bind(maybeFail);
+    String someNull = null;
+    MaybeMonad<Integer> failSafe = MaybeMonad.instance(someNull).bind(hashCode);//.bind(maybeFail);
 
     System.out.println(failSafe);
 

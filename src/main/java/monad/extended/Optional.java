@@ -6,7 +6,7 @@ import java.util.function.Function;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
-public abstract class Optional<U> implements ApplicativeFunctor<U> {
+public abstract class Optional<U> implements Monad<Optional<?>, U> {
 
     public static <E> Optional<E> of(E value){
         if(isNull(value)) {
@@ -17,16 +17,17 @@ public abstract class Optional<U> implements ApplicativeFunctor<U> {
     }
 
     @Override
-    public <T> ApplicativeFunctor<T> unit(T value) {
-        return of(value);
+    public <U1> Optional<U1> fmap(Function<U, U1> f) {
+        U containedValue = get();
+        if(isNull(containedValue)) {
+            return new Nothing<>();
+        }
+        return (Optional<U1>) unit(f.apply(containedValue));
     }
 
     @Override
-    public <U1> Functor<U1> fmap(Function<U, U1> f) {
-        if(isNull(get())) {
-            return new Nothing<>();
-        }
-        return unit(f.apply(get()));
+    public <U1> ApplicativeFunctor<Optional<?>, U1> unit(U1 value) {
+        return of(value);
     }
 
 
@@ -52,7 +53,17 @@ public abstract class Optional<U> implements ApplicativeFunctor<U> {
     private static class Nothing<E> extends Optional<E> {
 
         @Override
-        public E get() {
+        public <U> Optional<U> join() {
+            return new Nothing<>();
+        }
+
+        @Override
+        public <U> Optional<U> yield(Function<E, U> f) {
+            return new Nothing<>();
+        }
+
+        @Override
+        public <T> T get() {
             return null;
         }
 

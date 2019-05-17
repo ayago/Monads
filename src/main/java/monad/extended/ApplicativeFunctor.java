@@ -2,11 +2,15 @@ package monad.extended;
 
 import java.util.function.Function;
 
-public interface ApplicativeFunctor<T> extends Functor<T>{
+/**
+ * @param <F> The applicative type
+ * @param <T> The contained type
+ */
+public interface ApplicativeFunctor<F, T> extends Functor<T>{
 
-    <U> ApplicativeFunctor<U> unit(U value);
+    <U> ApplicativeFunctor<F, U> unit(U value);
 
-    default <U> ApplicativeFunctor<U> apply(final ApplicativeFunctor<Function<T, U>> ff) {
+    default <U> ApplicativeFunctor<F, U> apply(final ApplicativeFunctor<F, Function<T, U>> ff) {
         Function<T, U> f = ff.get();
         return unit(f.apply(get()));
     }

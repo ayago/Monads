@@ -3,7 +3,10 @@ package monad.extended;
 
 import java.util.function.Function;
 
+/**
+ * @param <T> The contained type
+ */
 public interface Functor<T> {
     <U> Functor<U> fmap(Function<T, U> f);
-    T get();
+    <E> E get();
 }
