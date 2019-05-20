@@ -4,72 +4,73 @@ import java.util.function.Function;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
-import static java.util.Objects.requireNonNull;
 
-public final class Optional {
+public abstract class Optional<T> implements Functor<T, Optional> {
 
-    public static <U> OptionalObject<U> of(U value){
+    public static <U> Optional<U> of(U value){
         if(isNull(value)){
-            return new OptionalObject.Nothing<>();
+            return new Nothing<>();
         }
 
-        return new OptionalObject.Just<>(value);
+        return new Just<>(value);
     }
 
-    public static <INPUT, OUTPUT> OptionalMorphism<INPUT, OUTPUT> of(Function<INPUT, OUTPUT> sourceMorphism) {
-        return new OptionalMorphism<>(sourceMorphism);
+    public static <A, B> Function<Optional<A>, Optional<B>> lift(Function<A, B> f) {
+        return i -> {
+            A containedValue = i.get();
+            if(isNull(containedValue)) {
+                return new Nothing<>();
+            }
+            return of(f.apply(containedValue));
+        };
     }
 
-    public static abstract class OptionalObject<T> implements ObjectFunctor<T>{
-
-        private static class Just<T> extends OptionalObject<T> {
-
-            private T value;
-
-            private Just(T value){
-                this.value = value;
-            }
-
-            @Override
-            public T get() {
-                return value;
-            }
-
-            @Override
-            public String toString(){
-                return format("Just %s", value);
-            }
+    @SuppressWarnings("unchecked")
+    @Override
+    public <U> Functor<U, Optional> fmap(Function<T, U> f) {
+        T t = get();
+        if(t instanceof Functor) {
+            Functor apply = ((Functor) t).fmap(f);
+            return (Optional<U>) of(apply);
         }
 
-        static class Nothing<T> extends OptionalObject<T> {
-
-            @Override
-            public T get() {
-                return null;
-            }
-
-            @Override
-            public String toString(){
-                return "Nothing";
-            }
-        }
+        return lift(f).apply(this);
     }
 
-    public static class OptionalMorphism<A, B> implements FMap<A, B, OptionalObject<A>, OptionalObject<B>>{
+    @Override
+    public <E, V extends Functor<? extends E, V>> Optional<V> compose(V before) {
+        return of(before);
+    }
 
-        private Function<A, B> sourceMorphism;
+    private static class Just<T> extends Optional<T> {
 
-        private OptionalMorphism(Function<A, B> sourceMorphism){
-            this.sourceMorphism = requireNonNull(sourceMorphism);
+        private T value;
+
+        private Just(T value){
+            this.value = value;
         }
 
         @Override
-        public OptionalObject<B> apply(OptionalObject<A> inputObjectFunctor) {
-            A containedValue = inputObjectFunctor.get();
-            if(isNull(containedValue)) {
-                return new OptionalObject.Nothing<>();
-            }
-            return of(sourceMorphism.apply(containedValue));
+        public T get() {
+            return value;
+        }
+
+        @Override
+        public String toString(){
+            return format("Just %s", value);
+        }
+    }
+
+    private static class Nothing<T> extends Optional<T> {
+
+        @Override
+        public T get() {
+            return null;
+        }
+
+        @Override
+        public String toString(){
+            return "Nothing";
         }
     }
 }
