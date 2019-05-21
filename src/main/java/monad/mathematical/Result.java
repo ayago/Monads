@@ -3,7 +3,6 @@ package monad.mathematical;
 import java.util.function.Function;
 
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 
 public abstract class Result<T> implements Functor<T, Result>{
 
@@ -38,9 +37,10 @@ public abstract class Result<T> implements Functor<T, Result>{
     }
 
     @Override
-    public <E, V extends Functor<? extends E, V>> Result<V> compose(V before) {
+    public <V extends Functor<?,  V>> Result<V> compose(V before) {
         return of(before);
     }
+
 
     private static class Success<E> extends Result<E>{
 

@@ -38,7 +38,7 @@ public abstract class Optional<T> implements Functor<T, Optional> {
     }
 
     @Override
-    public <E, V extends Functor<? extends E, V>> Optional<V> compose(V before) {
+    public <V extends Functor<?, V>> Optional<V> compose(V before) {
         return of(before);
     }
 

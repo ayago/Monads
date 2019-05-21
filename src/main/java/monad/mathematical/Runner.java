@@ -30,8 +30,11 @@ public class Runner {
         Optional<Result<Integer>> resultOptional = Optional.of(Result.of(2));
         System.out.println("Optional Result is: "+resultOptional);
 
-        Optional<Result> resultOptional2 = Optional.of(2).compose(Result.of(2));
-        System.out.println("Composite Optional Result is: "+resultOptional2);
+        Optional<Result> compose = Optional.of(2).compose(Result.of(2));
+        System.out.println("Composite Optional Result is: "+compose);
+
+        Result<Integer> actualResult = compose.get();
+        System.out.println("Composite Actual Result is: "+actualResult);
     }
 
 }
