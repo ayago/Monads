@@ -1,57 +1,44 @@
 package monad.mathematical;
 
+
 import java.util.function.Function;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
-public abstract class Optional<T> implements Functor<T, Optional> {
-
-    public static <U> Optional<U> of(U value){
-        if(isNull(value)){
-            return new Nothing<>();
+public abstract class Optional<U> extends AbstractMonad<Optional<?>, U> {
+    
+    public static <E> Optional<E> of(E value){
+        if(isNull(value)) {
+            return new Optional.Nothing<>();
         }
 
-        return new Just<>(value);
+        return new Optional.Just<>(value);
     }
 
-    public static <A, B> Function<Optional<A>, Optional<B>> lift(Function<A, B> f) {
-        return i -> {
-            A containedValue = i.get();
-            if(isNull(containedValue)) {
-                return new Nothing<>();
-            }
-            return of(f.apply(containedValue));
-        };
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <U> Functor<U, Optional> fmap(Function<T, U> f) {
-        T t = get();
-        if(t instanceof Functor) {
-            Functor apply = ((Functor) t).fmap(f);
-            return (Optional<U>) of(apply);
+    public <V> Optional<V> fmap(Function<U, V> f) {
+        U containedValue = get();
+        if(isNull(containedValue)) {
+            return new Optional.Nothing<>();
         }
-
-        return lift(f).apply(this);
+        return (Optional<V>) unit(f.apply(containedValue));
     }
 
     @Override
-    public <V extends Functor<?, V>> Optional<V> compose(V before) {
-        return of(before);
+    public <V> ApplicativeFunctor<Optional<?>, V> unit(V value) {
+        return of(value);
     }
 
-    private static class Just<T> extends Optional<T> {
+    private static class Just<E> extends Optional<E> {
 
-        private T value;
+        private E value;
 
-        private Just(T value){
+        private Just(E value){
             this.value = value;
         }
 
         @Override
-        public T get() {
+        public E get() {
             return value;
         }
 
@@ -61,10 +48,22 @@ public abstract class Optional<T> implements Functor<T, Optional> {
         }
     }
 
-    private static class Nothing<T> extends Optional<T> {
+    private static class Nothing<E> extends Optional<E> {
+
+        private static final Nothing NOTHING = new Nothing<>();
 
         @Override
-        public T get() {
+        public <U> Optional<U> join() {
+            return NOTHING;
+        }
+
+        @Override
+        public <U> Optional<U> yield(Function<E, U> f) {
+            return NOTHING;
+        }
+
+        @Override
+        public <T> T get() {
             return null;
         }
 

@@ -1,10 +1,12 @@
 package monad.mathematical;
 
+
 import java.util.function.Function;
 
-public interface Functor<V, T> {
-    V get();
-    <U> Functor<U, T> fmap(Function<V, U> f);
+/**
+ * @param <T> The contained type
+ */
+public interface Functor<T> {
+    <U> Functor<U> fmap(Function<T, U> f);
+    <E> E get();
 }
-
-
