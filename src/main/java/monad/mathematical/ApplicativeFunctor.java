@@ -3,15 +3,11 @@ package monad.mathematical;
 import java.util.function.Function;
 
 /**
- * @param <F> The applicative type
+ * @param <I> The applicative implementation
  * @param <T> The contained type
  */
-public interface ApplicativeFunctor<F, T> extends Functor<T> {
+public interface ApplicativeFunctor<I, T> extends Functor<I, T> {
+    <U> ApplicativeFunctor<I, U> unit(U value);
 
-    <U> ApplicativeFunctor<F, U> unit(U value);
-
-    default <U> ApplicativeFunctor<F, U> apply(final ApplicativeFunctor<F, Function<T, U>> ff) {
-        Function<T, U> f = ff.get();
-        return unit(f.apply(get()));
-    }
+    <U> ApplicativeFunctor<I, U> apply(ApplicativeFunctor<I, Function<T, U>> f);
 }

@@ -6,27 +6,34 @@ import java.util.function.Function;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
-public abstract class Optional<U> extends AbstractMonad<Optional<?>, U> {
+public abstract class Optional<U> extends AbstractMonad<Optional, U> implements Monad<Optional, U> {
     
     public static <E> Optional<E> of(E value){
         if(isNull(value)) {
-            return new Optional.Nothing<>();
+            return new Nothing<>();
         }
 
         return new Optional.Just<>(value);
     }
 
     public <V> Optional<V> fmap(Function<U, V> f) {
-        U containedValue = get();
+        U containedValue = containedValue();
         if(isNull(containedValue)) {
-            return new Optional.Nothing<>();
+            return new Nothing<>();
         }
-        return (Optional<V>) unit(f.apply(containedValue));
+        return unit(f.apply(containedValue));
     }
 
     @Override
-    public <V> ApplicativeFunctor<Optional<?>, V> unit(V value) {
+    public <V> Optional<V> unit(V value) {
         return of(value);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    <V> Optional<V> join(Monad<Optional, ? extends Monad<Optional, V>> v) {
+        final Optional<Monad<Optional, V>> optional = (Optional<Monad<Optional, V>>) v;
+        return optional.containedValue();
     }
 
     private static class Just<E> extends Optional<E> {
@@ -38,8 +45,8 @@ public abstract class Optional<U> extends AbstractMonad<Optional<?>, U> {
         }
 
         @Override
-        public E get() {
-            return value;
+        <V> V containedValue() {
+            return (V) value;
         }
 
         @Override
@@ -50,20 +57,8 @@ public abstract class Optional<U> extends AbstractMonad<Optional<?>, U> {
 
     private static class Nothing<E> extends Optional<E> {
 
-        private static final Nothing NOTHING = new Nothing<>();
-
         @Override
-        public <U> Optional<U> join() {
-            return NOTHING;
-        }
-
-        @Override
-        public <U> Optional<U> yield(Function<E, U> f) {
-            return NOTHING;
-        }
-
-        @Override
-        public <T> T get() {
+        <T> T containedValue() {
             return null;
         }
 
@@ -71,5 +66,6 @@ public abstract class Optional<U> extends AbstractMonad<Optional<?>, U> {
         public String toString(){
             return "Nothing";
         }
+
     }
 }

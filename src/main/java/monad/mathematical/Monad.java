@@ -3,8 +3,11 @@ package monad.mathematical;
 
 import java.util.function.Function;
 
-
-public interface Monad<F, T> extends ApplicativeFunctor<F, T> {
-
-    <U> Monad<F, U> bind(Function<T, ? extends Monad<F, U>> f);
+/**
+ * @param <I> The applicative implementation
+ * @param <T> The contained type
+ */
+public interface Monad<I, T> extends ApplicativeFunctor<I, T> {
+    <U> Monad<I, U> unit(U value);
+    <U> Monad<?, U> bind(Function<T, ? extends Monad<I, U>> f);
 }
