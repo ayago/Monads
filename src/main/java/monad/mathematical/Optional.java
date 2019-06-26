@@ -1,71 +1,85 @@
 package monad.mathematical;
 
-
 import java.util.function.Function;
+import java.util.function.Supplier;
 
-import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
-public abstract class Optional<U> extends AbstractMonad<Optional, U> implements Monad<Optional, U> {
-    
-    public static <E> Optional<E> of(E value){
-        if(isNull(value)) {
-            return new Nothing<>();
-        }
-
-        return new Optional.Just<>(value);
-    }
-
-    public <V> Optional<V> fmap(Function<U, V> f) {
-        U containedValue = containedValue();
-        if(isNull(containedValue)) {
-            return new Nothing<>();
-        }
-        return unit(f.apply(containedValue));
-    }
-
-    @Override
-    public <V> Optional<V> unit(V value) {
-        return of(value);
-    }
+/**
+ * Wraps value to give optional context
+ * avoiding null values gracefully
+ *
+ * @param <T> type of value to be wrapped
+ */
+public abstract class Optional<T> {
 
     @SuppressWarnings("unchecked")
-    @Override
-    <V> Optional<V> join(Monad<Optional, ? extends Monad<Optional, V>> v) {
-        final Optional<Monad<Optional, V>> optional = (Optional<Monad<Optional, V>>) v;
-        return optional.containedValue();
+    public static <U> Optional<U> unit(U value){
+        if(isNull(value)) {
+            return Nothing.DEFAULT;
+        }
+
+        return new Just<>(value);
     }
 
-    private static class Just<E> extends Optional<E> {
+    public <I, O> Function<Optional<I>, Optional<O>> fMap(Function<I, O> f) {
+        return tOptional -> unit(f.apply(tOptional.get()));
+    }
 
-        private E value;
+    public <U> Optional<U> map(Function<T, U> f) {
+        return fMap(f).apply(this);
+    }
 
-        private Just(E value){
+    public abstract <U> Optional<U> bind(Function<T, Optional<U>> f);
+
+    public static final class Just<I> extends Optional<I> {
+
+        private final I value;
+
+        private Just(I value) {
             this.value = value;
         }
 
         @Override
-        <V> V containedValue() {
-            return (V) value;
+        public <U> Optional<U> bind(Function<I, Optional<U>> f) {
+            return f.apply(value);
         }
 
         @Override
-        public String toString(){
-            return format("Just %s", value);
+        I get() {
+            return value;
+        }
+
+        @Override
+        public I orElse(Supplier<I> alternative) {
+            return value;
         }
     }
 
-    private static class Nothing<E> extends Optional<E> {
+    public static final class Nothing<I> extends Optional<I> {
+
+        private static final Optional DEFAULT = new Nothing<>();
+
+        private Nothing(){}
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <U> Optional<U> bind(Function<I, Optional<U>> f) {
+            return DEFAULT;
+        }
 
         @Override
-        <T> T containedValue() {
+        I get() {
             return null;
         }
 
         @Override
-        public String toString(){
-            return "Nothing";
+        public I orElse(Supplier<I> alternative) {
+            return alternative.get();
         }
-
     }
+
+    abstract T get();
+
+    public abstract T orElse(Supplier<T> alternative);
 }
