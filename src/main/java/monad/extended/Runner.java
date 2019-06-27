@@ -27,8 +27,8 @@ public class Runner {
         Function<Optional<Integer>, Optional<Integer>> minusTwoFmap = s -> optionalMinusTwo.fmap(f -> f.apply(s.get()));
 
         System.out.println("\nProving that Functors preserve composition of morphisms");
-        System.out.println(format("Optional composed: %s", optionalComposed.fmap(s -> s.apply(10))));
-        System.out.println(format("Optional separate gof: %s", minusTwoFmap.compose(addOneFmap).apply(10)));
+        System.out.println(format("OptionalFunctor composed: %s", optionalComposed.fmap(s -> s.apply(10))));
+        System.out.println(format("OptionalFunctor separate gof: %s", minusTwoFmap.compose(addOneFmap).apply(10)));
 
         System.out.println("\nPlaying with Monads");
         Function<Integer, Optional<Integer>> optionalAddSeven = s -> Optional.of(s + 7);
